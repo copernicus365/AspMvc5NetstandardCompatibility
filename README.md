@@ -1,22 +1,23 @@
 # AspMvc5NetstandardCompatibility
 
-Simple project that demonstrates the inability of ASP.NET MVC 5 razor views (.NET 4.7.1) to handle netstandard 2.0 libraries. In particular, the inability of `Microsoft.CodeDom.Providers.DotNetCompilerPlatform.CSharpCodeProvider` to handle netstandard references whatsoever. The project itself, other than in razor views, is workable (NOT exceptional, but with steps below its workable, there are still extremely frustrating problems, like incompatibility between netstandard and full framework with System.Net.Http). But overall your controllers and the rest of code can now handle netstandard referenced dlls, but the razor views just epically fail.
+Simple project that demonstrates the inability of ASP.NET MVC 5 razor views (.NET 4.7.1) to handle netstandard 2.0 libraries. Either something deep within MVC 5 is the problem, or (as discused below) `Microsoft.CodeDom.Providers.DotNetCompilerPlatform.CSharpCodeProvider` might be the problem. The project - in the controllers and so forth - is workable when referencing netstandard types, though even here there are extremely frustrating problems that arise, like chaos with `System.Net.Http`, and there seems to always be warnings about incompatibilities no matter what you do (no matter what `bindingRedirect`s you put in), and this is beyond frustrating and brittle (is anybody on the .NET team listening? I sure hope so). Even so, things appear to be workable after updating `packages.config` to PackageReferences (see below), but the razor views just epically fail.
 
-To duplicate the problem: 
+To duplicate the problem, as I have done in this repo: 
 
-1) Make a new netstandard project in Visual Studio (in this case using the latest VS 2017, even using the preview VS), in this case named: `FooProj_NetStandard20`
+1) Make a new netstandard project named here `FooProj_NetStandard20` in Visual Studio (using the latest VS 2017, even using Visual Studio preview which I actually was using doesn't help).
 
 2) Make a new ASP.NET MVC 5 (.NET Framework) project targeting .NET 4.7.1, and then make a reference to the new netstandard project (`FooProj_NetStandard20`).
 
-First though: Let us get the MVC project up to date with the latest way of handling nuget which is with `PackageRefence`s within the main `csproj`, instead of via `packages.config`. This removes many problems. I can't express how disappointing and irresponsible it is that this feature isn't part of VisualStudio, but that someone else had to make this extension, which I had to happen upon out in the wild. This is a recurrent theme, it seems like the wonderful .NET team is leaving what they must consider "legacy" code in the dust, in this case .NET full framework users. 
+Then we must update the MVC project to use the latest way of handling nuget (why is this not in the standard templates for new projects yet?), which is with `PackageRefence`s within the main `csproj`, instead of via `packages.config`. This removes many problems. 
+
+> A well deserved rant (which I'm not going to apologize for giving, if this isn't worthy of a comlaint, NOTHING is): 
+> I can't express how disappointing it is that this feature and many of the other things talked about here aren't part of Visual Studio, but that someone else had to make this extension, which I had to happen upon out in the wild. This is a recurrent theme, it seems like the wonderful .NET team, and I truly love all of the new work, but that the ball is being dropped big time for helping those millions of us who can't just immediately wave a magic wand and convert major projects over to a completely new code base (ASP.NET Core), but who CAN and are very happy to do big version updates, and to update as many of their side projects to netstandard. That is indeed what I have been trying to do for the upteenth time, yet again with failures. Who on the ASP.NET team is even giving a hoot for the millions of us? In my view, .NET Core and this new stuff just became useful at the launch of Net Core 2.0 / NetStandard 2.0, which was just barely yesterday (we're not talking even 3 years ago)!!! This is shokingly irresponsible to already be dropping any care or support for MVC 5 without helping us on it to work with stuff. Maybe it would be fine if at least the *messaging* let us know what was happening, but count me among the thousands who waited for half a year for 4.7.1 to come out, when github messages were saying this would supposedly solve the dll hell problems your new stuff has been causing our projects, but once again, 4.7.1 actually seemed to cause more problems than ever.
 
 So install this [NuGetPackageReferenceUpgrader extension](https://marketplace.visualstudio.com/items?itemName=CloudNimble.NuGetPackageReferenceUpgrader), right click on the `packages.config` file and select "Upgrade to PackageRefences". It performs its work in a blink of an eye.
 
 Then update all nuget references in the solution to get us all up to date, and voila, we have a vanilla new MVC 5 app with a reference to a vanilla new netstandard 2.0 app. 
 
-Now all we have to do to demonstrate the failure of Razor pages in MVC 5 to reference any type within a netstandard dll, is to make a simple type, any will do (even a simple enum) in the netstandard app. In my case I created two types: 
-
-Class `Animal`, and enum `AnimalType`:
+Now all we have to do to demonstrate the failure of Razor pages in MVC 5 is to reference any type within a netstandard dll. In my case I created two types in that netstandard project, class `Animal`, and enum `AnimalType`:
 
 ```cs
 // don't even need any usings 
@@ -40,7 +41,7 @@ namespace FooProj_NetStandard20
 }
 ```
 
-Now let's hop over to the MVC 5 web project, we'll use the existing `HomeController`, and pick let's say the `About.cshtml` page to send in a new model view type: `AboutViewModel`
+Now let's hop over to the MVC 5 web project, we'll use the existing `HomeController`, and pick let's say the `About.cshtml` page to send in a new view model type: `AboutViewModel`
 
 ```cs
 using FooProj_NetStandard20;
@@ -50,7 +51,6 @@ namespace AspMvc5WebApp471.Models
 	public class AboutViewModel
 	{
 		public string Title { get; set; }
-
 		public AnimalType AnimalTyp { get; set; }
 	}
 }
