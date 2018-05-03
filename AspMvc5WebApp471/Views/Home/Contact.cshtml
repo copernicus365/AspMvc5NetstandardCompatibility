@@ -1,0 +1,35 @@
+﻿@using FooProj_NetStandard20;
+@{
+	string title = "What does and doesn't work with netstandard reference in .NET 4.7.1 razor";
+	ViewBag.Title = title;
+
+	string subtitle = "some funny text";
+
+
+	// --> Call extension method ToFunkyCase defined in the netstandard lib:
+	subtitle = subtitle.ToFunkyCase(3);
+	// works! because no type is involved, even though this extension method
+	// was provided from the same netstandard lib
+
+
+	// call even a static method from the netstandard library, does NOT work:
+	int result = FooProj_NetStandard20.Animal.AddEm(3, 4);
+
+
+
+	// AddEm shows compile time exception:
+	// "The type 'Object' is defined in an assembly that is not referenced. You must add a reference to assembly 'netstandard, Version=2.0.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51'"
+}
+
+<h2>@title</h2>
+<h3>@subtitle</h3>
+<h3>What does and doesn't work with netstandard reference in .NET 4.7.1 razor</h3>
+
+<p>
+	Illustrates that a using statement for a netstandard referenced dll CAN be set on the razor page itself, and that things work, including calling functions, as long as no actual type is involved.
+	So calling <code>FooProj_NetStandard20.Animal.AddEm(3, 4)</code> above fails, because it makes
+	reference to type Animal (even though a static ref), whereas interstingly the extension method DOES
+	work.
+</p>
+
+
