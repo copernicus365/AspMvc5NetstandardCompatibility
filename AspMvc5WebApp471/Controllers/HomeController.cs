@@ -23,7 +23,7 @@ namespace AspMvc5WebApp471.Controllers
 				Title = "How's netstandard looking in Razor?!",
 				AnimalTyp = AnimalType.Alligator
 			};
-			return View();
+			return View(vm);
 		}
 
 		public ActionResult Contact()
